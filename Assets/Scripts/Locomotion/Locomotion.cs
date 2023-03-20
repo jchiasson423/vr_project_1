@@ -45,9 +45,10 @@ public class Locomotion : MonoBehaviour
 
     private void Move()
     {
+
         Vector3 joystickMove = joystick.axis.y * Vector3.forward + joystick.axis.x * Vector3.right;
         Vector3 movement = cameraTransform.rotation * (joystickMove * speed * Time.deltaTime);
-        movement.y = 0;
+        movement.y = -transform.position.y;
         controller.Move(movement);
     }
 }
