@@ -123,6 +123,8 @@ namespace Valve.VR.InteractionSystem
 		public static SteamVR_Events.Event< TeleportMarkerBase > PlayerPre = new SteamVR_Events.Event< TeleportMarkerBase >();
 		public static SteamVR_Events.Action< TeleportMarkerBase > PlayerPreAction( UnityAction< TeleportMarkerBase > action ) { return new SteamVR_Events.Action< TeleportMarkerBase >( PlayerPre, action ); }
 
+		private bool isAtivated = true;
+
 		//-------------------------------------------------
 		private static Teleport _instance;
 		public static Teleport instance
@@ -136,6 +138,11 @@ namespace Valve.VR.InteractionSystem
 
 				return _instance;
 			}
+		}
+
+		public void Activate(bool activate)
+		{
+			isAtivated = activate;
 		}
 
 
@@ -237,76 +244,82 @@ namespace Valve.VR.InteractionSystem
 		//-------------------------------------------------
 		void Update()
 		{
-			Hand oldPointerHand = pointerHand;
-			Hand newPointerHand = null;
+			if ( isAtivated ) {
+                Hand oldPointerHand = pointerHand;
+                Hand newPointerHand = null;
 
-			foreach ( Hand hand in player.hands )
-			{
-				if ( visible )
-				{
-					if ( WasTeleportButtonReleased( hand ) )
-					{
-						if ( pointerHand == hand ) //This is the pointer hand
-						{
-							TryTeleportPlayer();
-						}
-					}
-				}
+                foreach (Hand hand in player.hands)
+                {
+                    if (visible)
+                    {
+                        if (WasTeleportButtonReleased(hand))
+                        {
+                            if (pointerHand == hand) //This is the pointer hand
+                            {
+                                TryTeleportPlayer();
+                            }
+                        }
+                    }
 
-				if ( WasTeleportButtonPressed( hand ) )
-				{
-					newPointerHand = hand;
-				}
-			}
+                    if (WasTeleportButtonPressed(hand))
+                    {
+                        newPointerHand = hand;
+                    }
+                }
 
-			//If something is attached to the hand that is preventing teleport
-			if ( allowTeleportWhileAttached && !allowTeleportWhileAttached.teleportAllowed )
+                //If something is attached to the hand that is preventing teleport
+                if (allowTeleportWhileAttached && !allowTeleportWhileAttached.teleportAllowed)
+                {
+                    HidePointer();
+                }
+                else
+                {
+                    if (!visible && newPointerHand != null)
+                    {
+                        //Begin showing the pointer
+                        ShowPointer(newPointerHand, oldPointerHand);
+                    }
+                    else if (visible)
+                    {
+                        if (newPointerHand == null && !IsTeleportButtonDown(pointerHand))
+                        {
+                            //Hide the pointer
+                            HidePointer();
+                        }
+                        else if (newPointerHand != null)
+                        {
+                            //Move the pointer to a new hand
+                            ShowPointer(newPointerHand, oldPointerHand);
+                        }
+                    }
+                }
+
+                if (visible)
+                {
+                    UpdatePointer();
+
+                    if (meshFading)
+                    {
+                        UpdateTeleportColors();
+                    }
+
+                    if (onActivateObjectTransform.gameObject.activeSelf && Time.time - pointerShowStartTime > activateObjectTime)
+                    {
+                        onActivateObjectTransform.gameObject.SetActive(false);
+                    }
+                }
+                else
+                {
+                    if (onDeactivateObjectTransform.gameObject.activeSelf && Time.time - pointerHideStartTime > deactivateObjectTime)
+                    {
+                        onDeactivateObjectTransform.gameObject.SetActive(false);
+                    }
+                }
+            } else
 			{
 				HidePointer();
 			}
-			else
-			{
-				if ( !visible && newPointerHand != null )
-				{
-					//Begin showing the pointer
-					ShowPointer( newPointerHand, oldPointerHand );
-				}
-				else if ( visible )
-				{
-					if ( newPointerHand == null && !IsTeleportButtonDown( pointerHand ) )
-					{
-						//Hide the pointer
-						HidePointer();
-					}
-					else if ( newPointerHand != null )
-					{
-						//Move the pointer to a new hand
-						ShowPointer( newPointerHand, oldPointerHand );
-					}
-				}
-			}
-
-			if ( visible )
-			{
-				UpdatePointer();
-
-				if ( meshFading )
-				{
-					UpdateTeleportColors();
-				}
-
-				if ( onActivateObjectTransform.gameObject.activeSelf && Time.time - pointerShowStartTime > activateObjectTime )
-				{
-					onActivateObjectTransform.gameObject.SetActive( false );
-				}
-			}
-			else
-			{
-				if ( onDeactivateObjectTransform.gameObject.activeSelf && Time.time - pointerHideStartTime > deactivateObjectTime )
-				{
-					onDeactivateObjectTransform.gameObject.SetActive( false );
-				}
-			}
+			
 		}
 
 
@@ -491,56 +504,59 @@ namespace Valve.VR.InteractionSystem
 
 		//-------------------------------------------------
 		void FixedUpdate()
-		{
-			if ( !visible )
+		{	
+			if ( isAtivated )
 			{
-				return;
-			}
+                if (!visible)
+                {
+                    return;
+                }
 
-			if ( debugFloor )
-			{
-				//Debug floor
-				TeleportArea teleportArea = pointedAtTeleportMarker as TeleportArea;
-				if ( teleportArea != null )
-				{
-					if ( floorFixupMaximumTraceDistance > 0.0f )
-					{
-						floorDebugSphere.gameObject.SetActive( true );
-						floorDebugLine.gameObject.SetActive( true );
+                if (debugFloor)
+                {
+                    //Debug floor
+                    TeleportArea teleportArea = pointedAtTeleportMarker as TeleportArea;
+                    if (teleportArea != null)
+                    {
+                        if (floorFixupMaximumTraceDistance > 0.0f)
+                        {
+                            floorDebugSphere.gameObject.SetActive(true);
+                            floorDebugLine.gameObject.SetActive(true);
 
-						RaycastHit raycastHit;
-						Vector3 traceDir = Vector3.down;
-						traceDir.x = 0.01f;
-						if ( Physics.Raycast( pointedAtPosition + 0.05f * traceDir, traceDir, out raycastHit, floorFixupMaximumTraceDistance, floorFixupTraceLayerMask ) )
-						{
-							floorDebugSphere.transform.position = raycastHit.point;
-							floorDebugSphere.material.color = Color.green;
+                            RaycastHit raycastHit;
+                            Vector3 traceDir = Vector3.down;
+                            traceDir.x = 0.01f;
+                            if (Physics.Raycast(pointedAtPosition + 0.05f * traceDir, traceDir, out raycastHit, floorFixupMaximumTraceDistance, floorFixupTraceLayerMask))
+                            {
+                                floorDebugSphere.transform.position = raycastHit.point;
+                                floorDebugSphere.material.color = Color.green;
 #if (UNITY_5_4)
 							floorDebugLine.SetColors( Color.green, Color.green );
 #else
-							floorDebugLine.startColor = Color.green;
-							floorDebugLine.endColor = Color.green;
+                                floorDebugLine.startColor = Color.green;
+                                floorDebugLine.endColor = Color.green;
 #endif
-							floorDebugLine.SetPosition( 0, pointedAtPosition );
-							floorDebugLine.SetPosition( 1, raycastHit.point );
-						}
-						else
-						{
-							Vector3 rayEnd = pointedAtPosition + ( traceDir * floorFixupMaximumTraceDistance );
-							floorDebugSphere.transform.position = rayEnd;
-							floorDebugSphere.material.color = Color.red;
+                                floorDebugLine.SetPosition(0, pointedAtPosition);
+                                floorDebugLine.SetPosition(1, raycastHit.point);
+                            }
+                            else
+                            {
+                                Vector3 rayEnd = pointedAtPosition + (traceDir * floorFixupMaximumTraceDistance);
+                                floorDebugSphere.transform.position = rayEnd;
+                                floorDebugSphere.material.color = Color.red;
 #if (UNITY_5_4)
 							floorDebugLine.SetColors( Color.red, Color.red );
 #else
-							floorDebugLine.startColor = Color.red;
-							floorDebugLine.endColor = Color.red;
+                                floorDebugLine.startColor = Color.red;
+                                floorDebugLine.endColor = Color.red;
 #endif
-							floorDebugLine.SetPosition( 0, pointedAtPosition );
-							floorDebugLine.SetPosition( 1, rayEnd );
-						}
-					}
-				}
-			}
+                                floorDebugLine.SetPosition(0, pointedAtPosition);
+                                floorDebugLine.SetPosition(1, rayEnd);
+                            }
+                        }
+                    }
+                }
+            }
 		}
 
 
@@ -679,88 +695,92 @@ namespace Valve.VR.InteractionSystem
 		//-------------------------------------------------
 		private void ShowPointer( Hand newPointerHand, Hand oldPointerHand )
 		{
-			if ( !visible )
+			if ( isAtivated )
 			{
-				pointedAtTeleportMarker = null;
-				pointerShowStartTime = Time.time;
-				visible = true;
-				meshFading = true;
+                if (!visible)
+                {
+                    pointedAtTeleportMarker = null;
+                    pointerShowStartTime = Time.time;
+                    visible = true;
+                    meshFading = true;
 
-				teleportPointerObject.SetActive( false );
-				teleportArc.Show();
+                    teleportPointerObject.SetActive(false);
+                    teleportArc.Show();
 
-				foreach ( TeleportMarkerBase teleportMarker in teleportMarkers )
-				{
-					if ( teleportMarker.markerActive && teleportMarker.ShouldActivate( player.feetPositionGuess ) )
-					{
-						teleportMarker.gameObject.SetActive( true );
-						teleportMarker.Highlight( false );
-					}
-				}
+                    foreach (TeleportMarkerBase teleportMarker in teleportMarkers)
+                    {
+                        if (teleportMarker.markerActive && teleportMarker.ShouldActivate(player.feetPositionGuess))
+                        {
+                            teleportMarker.gameObject.SetActive(true);
+                            teleportMarker.Highlight(false);
+                        }
+                    }
 
-				startingFeetOffset = player.trackingOriginTransform.position - player.feetPositionGuess;
-				movedFeetFarEnough = false;
+                    startingFeetOffset = player.trackingOriginTransform.position - player.feetPositionGuess;
+                    movedFeetFarEnough = false;
 
-				if ( onDeactivateObjectTransform.gameObject.activeSelf )
-				{
-					onDeactivateObjectTransform.gameObject.SetActive( false );
-				}
-				onActivateObjectTransform.gameObject.SetActive( true );
+                    if (onDeactivateObjectTransform.gameObject.activeSelf)
+                    {
+                        onDeactivateObjectTransform.gameObject.SetActive(false);
+                    }
+                    onActivateObjectTransform.gameObject.SetActive(true);
 
-				loopingAudioSource.clip = pointerLoopSound;
-				loopingAudioSource.loop = true;
-				loopingAudioSource.Play();
-				loopingAudioSource.volume = 0.0f;
-			}
+                    loopingAudioSource.clip = pointerLoopSound;
+                    loopingAudioSource.loop = true;
+                    loopingAudioSource.Play();
+                    loopingAudioSource.volume = 0.0f;
+                }
 
 
-			if ( oldPointerHand )
-			{
-				if ( ShouldOverrideHoverLock() )
-				{
-					//Restore the original hovering interactable on the hand
-					if ( originalHoverLockState == true )
-					{
-						oldPointerHand.HoverLock( originalHoveringInteractable );
-					}
-					else
-					{
-						oldPointerHand.HoverUnlock( null );
-					}
-				}
-			}
+                if (oldPointerHand)
+                {
+                    if (ShouldOverrideHoverLock())
+                    {
+                        //Restore the original hovering interactable on the hand
+                        if (originalHoverLockState == true)
+                        {
+                            oldPointerHand.HoverLock(originalHoveringInteractable);
+                        }
+                        else
+                        {
+                            oldPointerHand.HoverUnlock(null);
+                        }
+                    }
+                }
 
-			pointerHand = newPointerHand;
+                pointerHand = newPointerHand;
 
-			if ( visible && oldPointerHand != pointerHand )
-			{
-				PlayAudioClip( pointerAudioSource, pointerStartSound );
-			}
+                if (visible && oldPointerHand != pointerHand)
+                {
+                    PlayAudioClip(pointerAudioSource, pointerStartSound);
+                }
 
-			if ( pointerHand )
-			{
-				pointerStartTransform = GetPointerStartTransform( pointerHand );
+                if (pointerHand)
+                {
+                    pointerStartTransform = GetPointerStartTransform(pointerHand);
 
-				if ( pointerHand.currentAttachedObject != null )
-				{
-					allowTeleportWhileAttached = pointerHand.currentAttachedObject.GetComponent<AllowTeleportWhileAttachedToHand>();
-				}
+                    if (pointerHand.currentAttachedObject != null)
+                    {
+                        allowTeleportWhileAttached = pointerHand.currentAttachedObject.GetComponent<AllowTeleportWhileAttachedToHand>();
+                    }
 
-				//Keep track of any existing hovering interactable on the hand
-				originalHoverLockState = pointerHand.hoverLocked;
-				originalHoveringInteractable = pointerHand.hoveringInteractable;
+                    //Keep track of any existing hovering interactable on the hand
+                    originalHoverLockState = pointerHand.hoverLocked;
+                    originalHoveringInteractable = pointerHand.hoveringInteractable;
 
-				if ( ShouldOverrideHoverLock() )
-				{
-					pointerHand.HoverLock( null );
-				}
+                    if (ShouldOverrideHoverLock())
+                    {
+                        pointerHand.HoverLock(null);
+                    }
 
-				pointerAudioSource.transform.SetParent( pointerStartTransform );
-				pointerAudioSource.transform.localPosition = Vector3.zero;
+                    pointerAudioSource.transform.SetParent(pointerStartTransform);
+                    pointerAudioSource.transform.localPosition = Vector3.zero;
 
-				loopingAudioSource.transform.SetParent( pointerStartTransform );
-				loopingAudioSource.transform.localPosition = Vector3.zero;
-			}
+                    loopingAudioSource.transform.SetParent(pointerStartTransform);
+                    loopingAudioSource.transform.localPosition = Vector3.zero;
+                }
+            }
+			
 		}
 
 
@@ -1033,7 +1053,11 @@ namespace Valve.VR.InteractionSystem
 		//-------------------------------------------------
 		public bool IsEligibleForTeleport( Hand hand )
 		{
-			if ( hand == null )
+            if (!isAtivated)
+            {
+                return false;
+            }
+            if ( hand == null )
 			{
 				return false;
 			}
@@ -1110,7 +1134,11 @@ namespace Valve.VR.InteractionSystem
 		//-------------------------------------------------
 		private bool IsTeleportButtonDown( Hand hand )
 		{
-			if ( IsEligibleForTeleport( hand ) )
+            if (!isAtivated)
+            {
+                return false;
+            }
+            if ( IsEligibleForTeleport( hand ) )
 			{
 				if ( hand.noSteamVRFallbackCamera != null )
 				{
@@ -1129,6 +1157,10 @@ namespace Valve.VR.InteractionSystem
 		//-------------------------------------------------
 		private bool WasTeleportButtonPressed( Hand hand )
 		{
+			if ( !isAtivated )
+			{
+				return false;
+			}
 			if ( IsEligibleForTeleport( hand ) )
 			{
 				if ( hand.noSteamVRFallbackCamera != null )

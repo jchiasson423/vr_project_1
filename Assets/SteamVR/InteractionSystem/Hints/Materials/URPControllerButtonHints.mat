@@ -21,17 +21,16 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: URPControllerButtonHints
-  m_Shader: {fileID: 4800000, guid: 650dd9526735d5b46b79224bc6e94025, type: 3}
-  m_ValidKeywords:
+  m_Shader: {fileID: 4800000, guid: de053fb214897cc439db35fc0361a282, type: 3}
+  m_ValidKeywords: []
+  m_InvalidKeywords:
   - _SURFACE_TYPE_TRANSPARENT
-  m_InvalidKeywords: []
   m_LightmapFlags: 5
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 1
-  m_CustomRenderQueue: 3000
+  m_CustomRenderQueue: -1
   stringTagMap:
     OriginalShader: Unlit/Texture
-    RenderType: Transparent
   disabledShaderPasses:
   - SHADOWCASTER
   - DepthOnly
@@ -123,7 +122,9 @@ Material:
     - g_bReceiveShadows: 1
     - g_bUnlit: 1
     - g_bWorldAlignedTexture: 0
+    - g_flCornerAdjust: 0.5
     - g_flCubeMapScalar: 1
+    - g_flOutlineWidth: 0.005
     - g_flReflectanceBias: 0
     - g_flReflectanceMax: 1
     - g_flReflectanceMin: 0
@@ -135,6 +136,7 @@ Material:
     - _SceneTint: {r: 0.64705884, g: 0.64705884, b: 0.64705884, a: 1}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
     - _TintColor: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
+    - g_vOutlineColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     - g_vWorldAlignedNormalTangentU: {r: -1, g: 0, b: 0, a: 0}
     - g_vWorldAlignedNormalTangentV: {r: 0, g: 0, b: 1, a: 0}
     - g_vWorldAlignedTextureNormal: {r: 0, g: 1, b: 0, a: 0}

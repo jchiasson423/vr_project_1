@@ -55,6 +55,11 @@
       "requirement": "mandatory"
     },
     {
+      "name": "/actions/default/in/Locomotion_mode_toggle",
+      "type": "boolean",
+      "requirement": "mandatory"
+    },
+    {
       "name": "/actions/default/out/Haptic",
       "type": "vibration"
     },

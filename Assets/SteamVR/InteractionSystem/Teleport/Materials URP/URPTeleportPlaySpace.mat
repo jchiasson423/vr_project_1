@@ -21,17 +21,16 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: URPTeleportPlaySpace
-  m_Shader: {fileID: 4800000, guid: 0406db5a14f94604a8c57ccfbc9f3b46, type: 3}
-  m_ValidKeywords:
-  - _SURFACE_TYPE_TRANSPARENT
+  m_Shader: {fileID: 4800000, guid: 0c1cf10ea69e60e4f9eb8955749f88ec, type: 3}
+  m_ValidKeywords: []
   m_InvalidKeywords:
   - _FLIPBOOKBLENDING_OFF
+  - _SURFACE_TYPE_TRANSPARENT
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
-  m_CustomRenderQueue: 3000
-  stringTagMap:
-    RenderType: Transparent
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
   disabledShaderPasses:
   - SHADOWCASTER
   - DepthOnly
@@ -131,7 +130,9 @@ Material:
     - g_bReceiveShadows: 1
     - g_bUnlit: 1
     - g_bWorldAlignedTexture: 0
+    - g_flCornerAdjust: 0.5
     - g_flCubeMapScalar: 1
+    - g_flOutlineWidth: 0.005
     - g_flReflectanceBias: 0
     - g_flReflectanceMax: 1
     - g_flReflectanceMin: 0
@@ -145,6 +146,7 @@ Material:
     - _SoftParticleFadeParams: {r: 0, g: 0, b: 0, a: 0}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _TintColor: {r: 0.295302, g: 0.534, b: 0.29694816, a: 1}
+    - g_vOutlineColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     - g_vWorldAlignedNormalTangentU: {r: -1, g: 0, b: 0, a: 0}
     - g_vWorldAlignedNormalTangentV: {r: 0, g: 0, b: 1, a: 0}
     - g_vWorldAlignedTextureNormal: {r: 0, g: 1, b: 0, a: 0}

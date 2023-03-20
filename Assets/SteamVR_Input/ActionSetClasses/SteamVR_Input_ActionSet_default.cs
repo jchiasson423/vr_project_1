@@ -113,6 +113,14 @@ namespace Valve.VR
             }
         }
         
+        public virtual SteamVR_Action_Boolean Locomotion_mode_toggle
+        {
+            get
+            {
+                return SteamVR_Actions.default_Locomotion_mode_toggle;
+            }
+        }
+        
         public virtual SteamVR_Action_Vibration Haptic
         {
             get
